@@ -1,9 +1,173 @@
-openapi: 3.0.3
+openapi: 3.0.0
 info:
-  title: Vehicle Service
-  description: Vehicle Service
-  version: 1.0.0
+  title: Vehicles Service APIs
+  version: 0.1.0
+  description: APIs for managing vehicles.
 servers:
-  - url: 'https://localhost:8080'
+  - url: http://localhost:8080
 paths:
-  
+  /cars:
+    get:
+      summary: get all car listing
+      tags:
+        - Car
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+          example: truck
+      responses:
+        '200':
+          description: successful request
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/car'
+    post:
+      summary: Create a new car listing
+      tags:
+        - Car
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/car'
+      responses:
+        '200':
+          description: Car listing created successfully.
+        '400':
+          description: Bad request. Invalid input data.
+          content:
+            application/json:
+              examples:
+                example1:
+                  summary: Example 1
+                  value:
+                    message: invalid input data. Please check the request body.
+                example2:
+                  summary: Example 2
+                  value:
+                    message: car exists
+  '/cars/{id}':
+    get:
+      summary: get a car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique ID of the car to be updated.
+          schema:
+            type: string
+          example: IS23JD
+      tags:
+        - Car
+      responses:
+        '200':
+          description: successful request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/car'
+        '404':
+          description: car not found.
+          content:
+            application/json:
+              example:
+                message: car not found.
+    put:
+      summary: Update an existing car listing
+      tags:
+        - Car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique ID of the car to be updated.
+          schema:
+            type: string
+          example: IS23JD
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                price:
+                  type: number
+                  description: The updated price of the car.
+                  example: 1200.5
+                mileage:
+                  type: integer
+                  description: The updated mileage of the car.
+                  example: 150
+      responses:
+        '200':
+          description: Car listing updated successfully.
+        '400':
+          description: Bad request. Invalid input data.
+          content:
+            application/json:
+              example:
+                message: invalid input data. Please check the request body.
+        '404':
+          description: car not found.
+          content:
+            application/json:
+              example:
+                message: car not found.
+components:
+  schemas:
+    car:
+      type: object
+      required:
+        - id
+        - make
+        - model
+        - category
+        - price
+        - mileage
+        - year
+        - package
+        - color
+      properties:
+        id:
+          type: string
+          description: The unique ID of the car.
+          example: IS23JD
+        price:
+          type: number
+          description: The price of the car.
+          example: 1002.2
+        mileage:
+          type: integer
+          description: The mileage of the car.
+          example: 122
+        category:
+          type: string
+          description: 'The category of the car (e.g., truck, sedan).'
+          example: truck
+        year:
+          type: integer
+          description: The manufacturing year of the car.
+          example: 2023
+        color:
+          type: string
+          description: The color of the car.
+          example: silver
+        package:
+          type: string
+          description: The package or trim level of the car.
+          example: base
+        make:
+          type: string
+          description: 'The make of the car (e.g., Ford, Toyota).'
+          example: F10
+        model:
+          type: string
+          description: The model of the car.
+          example: Ford

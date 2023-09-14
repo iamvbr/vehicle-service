@@ -2,6 +2,7 @@ package cars
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/iamvbr/vehicle-service/internal/models"
 	"github.com/iamvbr/vehicle-service/internal/services"
 	"io"
@@ -34,8 +35,13 @@ func New(svc services.Car) *handler {
 	return &handler{svc: svc}
 }
 
-var internalServerError = []byte(`{"error":"internal server error"}`)
+var internalServerError = []byte(`{"message":"internal server error"}`)
 
+// TODO: this is not the right way to handle errors, and should come from a common place
+func formatError(err error) []byte {
+	v, _ := json.Marshal(map[string]string{"message": err.Error()})
+	return v
+}
 func (h *handler) Index(w http.ResponseWriter, r *http.Request) {
 	cars, err := h.svc.Find(r.Context(), r.URL.Query().Get("category"))
 	// TODO: We can have common response handling
@@ -56,8 +62,9 @@ func (h *handler) Read(w http.ResponseWriter, r *http.Request) {
 
 	car, err := h.svc.Get(r.Context(), id)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		//TODO: it might not always be 400
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(formatError(err))
 		return
 	}
 
@@ -70,21 +77,21 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write(formatError(err))
 		return
 	}
 
 	var m models.Car
 	if err := json.Unmarshal(b, &m); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(formatError(errors.New("invalid input data. Please check the request body")))
 		return
 	}
 
 	car, err := h.svc.Create(r.Context(), &m)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(formatError(err))
 		return
 	}
 
@@ -100,21 +107,21 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write(formatError(err))
 		return
 	}
 
 	var m models.Car
 	if err := json.Unmarshal(b, &m); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(formatError(errors.New("invalid input data. Please check the request body")))
 		return
 	}
 
 	car, err := h.svc.Update(r.Context(), id, &m)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(formatError(err))
 		return
 	}
 
